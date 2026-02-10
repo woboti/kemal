@@ -10,7 +10,7 @@ describe "Kemal::ExceptionHandler" do
     io = IO::Memory.new
     response = HTTP::Server::Response.new(io)
     context = HTTP::Server::Context.new(request, response)
-    Kemal::ExceptionHandler::INSTANCE.call(context)
+    Kemal.config.exception_handler.call(context)
     response.close
     io.rewind
     response = HTTP::Client::Response.from_io(io, decompress: false)
@@ -28,8 +28,8 @@ describe "Kemal::ExceptionHandler" do
     io = IO::Memory.new
     response = HTTP::Server::Response.new(io)
     context = HTTP::Server::Context.new(request, response)
-    Kemal::ExceptionHandler::INSTANCE.next = Kemal::RouteHandler::INSTANCE
-    Kemal::ExceptionHandler::INSTANCE.call(context)
+    Kemal.config.exception_handler.next = Kemal.config.route_handler
+    Kemal.config.exception_handler.call(context)
     response.close
     io.rewind
     response = HTTP::Client::Response.from_io(io, decompress: false)
@@ -49,8 +49,8 @@ describe "Kemal::ExceptionHandler" do
     io = IO::Memory.new
     response = HTTP::Server::Response.new(io)
     context = HTTP::Server::Context.new(request, response)
-    Kemal::ExceptionHandler::INSTANCE.next = Kemal::RouteHandler::INSTANCE
-    Kemal::ExceptionHandler::INSTANCE.call(context)
+    Kemal.config.exception_handler.next = Kemal.config.route_handler
+    Kemal.config.exception_handler.call(context)
     response.close
     io.rewind
     response = HTTP::Client::Response.from_io(io, decompress: false)
@@ -72,8 +72,8 @@ describe "Kemal::ExceptionHandler" do
     io = IO::Memory.new
     response = HTTP::Server::Response.new(io)
     context = HTTP::Server::Context.new(request, response)
-    Kemal::ExceptionHandler::INSTANCE.next = Kemal::RouteHandler::INSTANCE
-    Kemal::ExceptionHandler::INSTANCE.call(context)
+    Kemal.config.exception_handler.next = Kemal.config.route_handler
+    Kemal.config.exception_handler.call(context)
     response.close
     io.rewind
     response = HTTP::Client::Response.from_io(io, decompress: false)
@@ -95,8 +95,8 @@ describe "Kemal::ExceptionHandler" do
     io = IO::Memory.new
     response = HTTP::Server::Response.new(io)
     context = HTTP::Server::Context.new(request, response)
-    Kemal::ExceptionHandler::INSTANCE.next = Kemal::RouteHandler::INSTANCE
-    Kemal::ExceptionHandler::INSTANCE.call(context)
+    Kemal.config.exception_handler.next = Kemal.config.route_handler
+    Kemal.config.exception_handler.call(context)
     response.close
     io.rewind
     response = HTTP::Client::Response.from_io(io, decompress: false)
@@ -119,8 +119,8 @@ describe "Kemal::ExceptionHandler" do
     io = IO::Memory.new
     response = HTTP::Server::Response.new(io)
     context = HTTP::Server::Context.new(request, response)
-    Kemal::ExceptionHandler::INSTANCE.next = Kemal::RouteHandler::INSTANCE
-    Kemal::ExceptionHandler::INSTANCE.call(context)
+    Kemal.config.exception_handler.next = Kemal.config.route_handler
+    Kemal.config.exception_handler.call(context)
     response.close
     io.rewind
     response = HTTP::Client::Response.from_io(io, decompress: false)
@@ -142,8 +142,8 @@ describe "Kemal::ExceptionHandler" do
     io = IO::Memory.new
     response = HTTP::Server::Response.new(io)
     context = HTTP::Server::Context.new(request, response)
-    Kemal::ExceptionHandler::INSTANCE.next = Kemal::RouteHandler::INSTANCE
-    Kemal::ExceptionHandler::INSTANCE.call(context)
+    Kemal.config.exception_handler.next = Kemal.config.route_handler
+    Kemal.config.exception_handler.call(context)
     response.close
     io.rewind
     response = HTTP::Client::Response.from_io(io, decompress: false)
@@ -166,8 +166,8 @@ describe "Kemal::ExceptionHandler" do
     io = IO::Memory.new
     response = HTTP::Server::Response.new(io)
     context = HTTP::Server::Context.new(request, response)
-    Kemal::ExceptionHandler::INSTANCE.next = Kemal::RouteHandler::INSTANCE
-    Kemal::ExceptionHandler::INSTANCE.call(context)
+    Kemal.config.exception_handler.next = Kemal.config.route_handler
+    Kemal.config.exception_handler.call(context)
     response.close
     io.rewind
     response = HTTP::Client::Response.from_io(io, decompress: false)
@@ -188,8 +188,8 @@ describe "Kemal::ExceptionHandler" do
     io = IO::Memory.new
     response = HTTP::Server::Response.new(io)
     context = HTTP::Server::Context.new(request, response)
-    Kemal::ExceptionHandler::INSTANCE.next = Kemal::RouteHandler::INSTANCE
-    Kemal::ExceptionHandler::INSTANCE.call(context)
+    Kemal.config.exception_handler.next = Kemal.config.route_handler
+    Kemal.config.exception_handler.call(context)
     response.close
     io.rewind
     response = HTTP::Client::Response.from_io(io, decompress: false)
@@ -210,8 +210,8 @@ describe "Kemal::ExceptionHandler" do
     io = IO::Memory.new
     response = HTTP::Server::Response.new(io)
     context = HTTP::Server::Context.new(request, response)
-    Kemal::ExceptionHandler::INSTANCE.next = Kemal::RouteHandler::INSTANCE
-    Kemal::ExceptionHandler::INSTANCE.call(context)
+    Kemal.config.exception_handler.next = Kemal.config.route_handler
+    Kemal.config.exception_handler.call(context)
     response.close
     io.rewind
     response = HTTP::Client::Response.from_io(io, decompress: false)

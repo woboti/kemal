@@ -6,9 +6,11 @@ module Kemal
   class InitHandler
     include HTTP::Handler
 
-    INSTANCE = new
+    def initialize(@config : Kemal::Config = Config::INSTANCE)
+    end
 
     def call(context : HTTP::Server::Context)
+      context.config = @config
       context.response.headers.add "X-Powered-By", "Kemal" if Kemal.config.powered_by_header?
       context.response.content_type = "text/html" unless context.response.headers.has_key?("Content-Type")
       context.response.headers.add "Date", HTTP.format_time(Time.utc)

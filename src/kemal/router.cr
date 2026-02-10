@@ -60,7 +60,7 @@ module Kemal
     @websockets : Array(WSDefinition)
     @sub_routers : Array(SubRouter)
 
-    def initialize(@prefix : String = "")
+    def initialize(@prefix : String = "", @config : Kemal::Config = Config::INSTANCE)
       @routes = [] of RouteDefinition
       @filters = [] of FilterDefinition
       @websockets = [] of WSDefinition
@@ -192,7 +192,7 @@ module Kemal
       @routes.each do |route|
         full_path = join_paths(full_prefix, route.path)
         validate_path!(route.method.downcase, full_path)
-        Kemal::RouteHandler::INSTANCE.add_route(route.method, full_path) do |env|
+        @config.route_handler.add_route(route.method, full_path) do |env|
           route.handler.call(env)
         end
       end
@@ -201,7 +201,7 @@ module Kemal
       @websockets.each do |ws_def|
         full_path = join_paths(full_prefix, ws_def.path)
         validate_path!("ws", full_path)
-        Kemal::WebSocketHandler::INSTANCE.add_route(full_path, &ws_def.handler)
+        @config.web_socket_handler.add_route(full_path, &ws_def.handler)
       end
 
       # Register sub-routers recursively
@@ -235,8 +235,8 @@ module Kemal
       return if @filters.empty?
 
       # Ensure FilterHandler is registered with Kemal (may have been cleared between tests)
-      unless Kemal::Config::FILTER_HANDLERS.includes?(Kemal::FilterHandler::INSTANCE)
-        Kemal.config.add_filter_handler(Kemal::FilterHandler::INSTANCE)
+      unless @config.filter_handlers.includes?(@config.filter_handler)
+        Kemal.config.add_filter_handler(@config.filter_handler)
       end
 
       @filters.each do |filter|
@@ -259,11 +259,11 @@ module Kemal
 
           case filter.type
           when :before
-            Kemal::FilterHandler::INSTANCE.before(register_method, route_path) do |env|
+            @config.filter_handler.before(register_method, route_path) do |env|
               filter.handler.call(env)
             end
           when :after
-            Kemal::FilterHandler::INSTANCE.after(register_method, route_path) do |env|
+            @config.filter_handler.after(register_method, route_path) do |env|
               filter.handler.call(env)
             end
           end

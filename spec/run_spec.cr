@@ -38,7 +38,7 @@ describe "Run" do
   it "runs without a block being specified" do
     run(<<-CR).should contain "[test] Kemal is running in test mode."
       Kemal.run
-      Kemal.config.running
+      Kemal.server.running
       CR
   end
 

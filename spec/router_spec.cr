@@ -326,7 +326,7 @@ describe "Kemal::Router" do
 
       mount "/ws", router
 
-      handler = Kemal::WebSocketHandler::INSTANCE
+      handler = Kemal.config.web_socket_handler
       headers = HTTP::Headers{
         "Upgrade"               => "websocket",
         "Connection"            => "Upgrade",
@@ -347,7 +347,7 @@ describe "Kemal::Router" do
 
       mount "/ws", router
 
-      handler = Kemal::WebSocketHandler::INSTANCE
+      handler = Kemal.config.web_socket_handler
       headers = HTTP::Headers{
         "Upgrade"               => "websocket",
         "Connection"            => "Upgrade",

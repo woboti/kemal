@@ -8,6 +8,8 @@ class HTTP::Server
     # :nodoc:
     STORE_MAPPINGS = [Nil, String, Int32, Int64, Float64, Bool]
 
+    property config : Kemal::Config?
+
     macro finished
       alias StoreTypes = Union({{ STORE_MAPPINGS.splat }})
       @store = {} of String => StoreTypes
@@ -44,7 +46,7 @@ class HTTP::Server
     # Optimized: Cache route lookup result to avoid redundant lookups
     # when called multiple times (e.g., route_found?, route, params)
     def route_lookup
-      @cached_route_lookup ||= Kemal::RouteHandler::INSTANCE.lookup_route(@request.method.as(String), @request.path)
+      return @cached_route_lookup ||= config.route_handler.lookup_route(@request.method.as(String), @request.path)
     end
 
     def route_found?
@@ -53,11 +55,15 @@ class HTTP::Server
 
     # Optimized: Cache websocket route lookup result to avoid redundant lookups
     def ws_route_lookup
-      @cached_ws_route_lookup ||= Kemal::WebSocketHandler::INSTANCE.lookup_ws_route(@request.path)
+      return @cached_ws_route_lookup ||= config.web_socket_handler.lookup_ws_route(@request.path)
     end
 
     def ws_route_found?
       ws_route_lookup.found?
+    end
+    
+    def config
+      @config ||= Kemal.config
     end
 
     def get(name : String)

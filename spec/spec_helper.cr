@@ -91,8 +91,8 @@ end
 
 Spec.after_each do
   Kemal.config.clear
-  Kemal::FilterHandler::INSTANCE.tree = Radix::Tree(Array(Kemal::FilterHandler::FilterBlock)).new
-  Kemal::RouteHandler::INSTANCE.routes = Radix::Tree(Route).new
-  Kemal::RouteHandler::INSTANCE.cached_routes = Kemal::LRUCache(String, Radix::Result(Kemal::Route)).new(Kemal.config.max_route_cache_size)
-  Kemal::WebSocketHandler::INSTANCE.routes = Radix::Tree(WebSocket).new
+  Kemal.config.filter_handler.tree = Radix::Tree(Array(Kemal::FilterHandler::FilterBlock)).new
+  Kemal.config.route_handler.routes = Radix::Tree(Route).new
+  Kemal.config.route_handler.cached_routes = Kemal::LRUCache(String, Radix::Result(Kemal::Route)).new(Kemal.config.max_route_cache_size)
+  Kemal.config.web_socket_handler.routes = Radix::Tree(WebSocket).new
 end

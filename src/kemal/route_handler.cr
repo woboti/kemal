@@ -103,12 +103,12 @@ module Kemal
   class RouteHandler
     include HTTP::Handler
 
-    INSTANCE = new
     property routes, cached_routes
+    getter config : Kemal::Config
 
-    def initialize
+    def initialize(@config : Kemal::Config)
       @routes = Radix::Tree(Route).new
-      @cached_routes = LRUCache(String, Radix::Result(Route)).new(Kemal.config.max_route_cache_size)
+      @cached_routes = LRUCache(String, Radix::Result(Route)).new(@config.max_route_cache_size)
     end
 
     def call(context : HTTP::Server::Context)

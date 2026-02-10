@@ -27,7 +27,7 @@ FILTER_METHODS = %w[get post put patch delete options all]
 {% for method in HTTP_METHODS %}
   def {{ method.id }}(path : String, &block : HTTP::Server::Context -> _)
     raise Kemal::Exceptions::InvalidPathStartException.new({{ method }}, path) unless Kemal::Utils.path_starts_with_slash?(path)
-    Kemal::RouteHandler::INSTANCE.add_route({{ method }}.upcase, path, &block)
+    Kemal.config.route_handler.add_route({{ method }}.upcase, path, &block)
   end
 {% end %}
 
@@ -44,7 +44,7 @@ FILTER_METHODS = %w[get post put patch delete options all]
 # ```
 def ws(path : String, &block : HTTP::WebSocket, HTTP::Server::Context ->)
   raise Kemal::Exceptions::InvalidPathStartException.new("ws", path) unless Kemal::Utils.path_starts_with_slash?(path)
-  Kemal::WebSocketHandler::INSTANCE.add_route path, &block
+  Kemal.config.web_socket_handler.add_route path, &block
 end
 
 # Defines an error handler for the given HTTP status code.
@@ -103,12 +103,12 @@ end
 {% for type in ["before", "after"] %}
   {% for method in FILTER_METHODS %}
     def {{ type.id }}_{{ method.id }}(path : String = "*", &block : HTTP::Server::Context -> _)
-     Kemal::FilterHandler::INSTANCE.{{ type.id }}({{ method }}.upcase, path, &block)
+     Kemal.config.filter_handler.{{ type.id }}({{ method }}.upcase, path, &block)
     end
 
     def {{ type.id }}_{{ method.id }}(paths : Enumerable(String), &block : HTTP::Server::Context -> _)
       paths.each do |path|
-        Kemal::FilterHandler::INSTANCE.{{ type.id }}({{ method }}.upcase, path, &block)
+        Kemal.config.filter_handler.{{ type.id }}({{ method }}.upcase, path, &block)
       end
     end
   {% end %}

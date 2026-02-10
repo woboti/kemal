@@ -12,7 +12,7 @@ describe "Kemal::HeadRequestHandler" do
   end
 
   it "prefers explicit HEAD endpoint if specified" do
-    Kemal::RouteHandler::INSTANCE.add_route("HEAD", "/") { "hello" }
+    Kemal.config.route_handler.add_route("HEAD", "/") { "hello" }
     get "/" do
       raise "shouldn't be called!"
     end

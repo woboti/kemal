@@ -31,7 +31,7 @@ module Kemal
   # To use custom command line arguments, set args to nil
   #
   def self.run(port : Int32? = nil, args = ARGV, trap_signal : Bool = true, &)
-    Kemal::CLI.new args
+    Kemal::CLI.new args, Kemal.config
     config = Kemal.config
     config.setup
     config.port = port if port
@@ -44,12 +44,12 @@ module Kemal
 
     server = config.server ||= HTTP::Server.new(config.handlers)
 
-    config.running = true
+    Kemal.server.running = true
 
     yield config
 
     # Abort if block called `Kemal.stop`
-    return if !config.running
+    return if !Kemal.server.running
 
     if config.env != "test"
       if !server.each_address { |_| break true }
@@ -80,10 +80,10 @@ module Kemal
   end
 
   def self.stop
-    raise "#{Kemal.config.app_name} is already stopped. Cannot stop an already stopped server." if !config.running
-    if server = config.server
-      server.close unless server.closed?
-      config.running = false
+    raise "#{Kemal.config.app_name} is already stopped. Cannot stop an already stopped server." if !Kemal.server.running
+    if handler = Kemal.server.config.server
+      handler.close unless handler.closed?
+      Kemal.server.running = false
     else
       raise "Cannot stop #{Kemal.config.app_name}: server instance is not set. Please ensure Kemal.run has been called before calling Kemal.stop."
     end
@@ -103,5 +103,13 @@ module Kemal
       Kemal.stop
       exit
     end
+  end
+
+  def self.server(&)
+    yield @@server_instance || (@@server_instance = Server.new Config::INSTANCE)
+  end
+
+  def self.server
+    @@server_instance || (@@server_instance = Server.new Config::INSTANCE)
   end
 end

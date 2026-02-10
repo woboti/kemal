@@ -10,7 +10,6 @@ module Kemal
   # **Important:** This middleware consumes `params.body` to read the `_method` magic parameter.
   class OverrideMethodHandler
     include HTTP::Handler
-    INSTANCE = new
 
     ALLOWED_METHODS           = ["PUT", "PATCH", "DELETE"]
     OVERRIDE_METHOD           = "POST"

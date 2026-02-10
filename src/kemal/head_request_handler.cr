@@ -4,8 +4,6 @@ module Kemal
   class HeadRequestHandler
     include HTTP::Handler
 
-    INSTANCE = new
-
     private class NullIO < IO
       @original_output : IO
       @out_count : Int32

@@ -2,7 +2,6 @@ module Kemal
   class WebSocketHandler
     include HTTP::Handler
 
-    INSTANCE = new
     property routes
 
     def initialize

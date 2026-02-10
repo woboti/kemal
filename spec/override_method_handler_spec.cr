@@ -9,7 +9,7 @@ describe "Kemal::OverrideMethodHandler" do
       headers: HTTP::Headers{"Content-Type" => "application/x-www-form-urlencoded; charset=UTF-8"}
     )
 
-    context = create_request_and_return_io_and_context(Kemal::OverrideMethodHandler::INSTANCE, request)[1]
+    context = create_request_and_return_io_and_context(Kemal.config.override_method_handler, request)[1]
 
     context.request.method.should eq "POST"
   end
@@ -22,7 +22,7 @@ describe "Kemal::OverrideMethodHandler" do
       headers: HTTP::Headers{"Content-Type" => "application/x-www-form-urlencoded; charset=UTF-8"}
     )
 
-    context = create_request_and_return_io_and_context(Kemal::OverrideMethodHandler::INSTANCE, request)[1]
+    context = create_request_and_return_io_and_context(Kemal.config.override_method_handler, request)[1]
 
     context.request.method.should eq "PATCH"
   end
