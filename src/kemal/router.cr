@@ -236,7 +236,7 @@ module Kemal
 
       # Ensure FilterHandler is registered with Kemal (may have been cleared between tests)
       unless @config.filter_handlers.includes?(@config.filter_handler)
-        Kemal.config.add_filter_handler(@config.filter_handler)
+        @config.add_filter_handler(@config.filter_handler)
       end
 
       @filters.each do |filter|

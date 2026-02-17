@@ -1,8 +1,11 @@
 module Kemal
   class StaticFileHandler < HTTP::StaticFileHandler
+
+    property config : Kemal::Config = Config::INSTANCE
+
     {% if compare_versions(Crystal::VERSION, "1.17.0") >= 0 %}
       private def directory_index(context : HTTP::Server::Context, request_path : Path, file_path : Path)
-        config = Kemal.config.serve_static
+        config = @config.serve_static
         unless config.is_a?(Hash)
           return call_next(context)
         end
@@ -79,7 +82,7 @@ module Kemal
         return call_next(context) unless file_info
 
         if is_dir
-          config = Kemal.config.serve_static
+          config = @config.serve_static
 
           if config.is_a?(Hash) && config.fetch("dir_index", false) && File.exists?(File.join(file_path, "index.html"))
             file_path = File.join(@public_dir, expanded_path, "index.html")

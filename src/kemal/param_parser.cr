@@ -11,7 +11,9 @@ module Kemal
     alias AllParamTypes = String | Int64 | Float64 | Bool | Hash(String, JSON::Any) | Array(JSON::Any)?
     getter files, all_files
 
-    def initialize(@request : HTTP::Request, @url : Hash(String, String) = {} of String => String)
+    property config : Kemal::Config = Config::INSTANCE
+
+    def initialize(@request : HTTP::Request, @url : Hash(String, String) = {} of String => String, @config : Kemal::Config = Config::INSTANCE)
       @query = HTTP::Params.new({} of String => Array(String))
       @body = HTTP::Params.new({} of String => Array(String))
       @json = {} of String => AllParamTypes
@@ -140,13 +142,13 @@ module Kemal
     private def validate_content_length!
       return unless length_str = @request.headers["Content-Length"]?
       return unless length = length_str.to_i?
-      return if length <= Kemal.config.max_request_body_size
+      return if length <= @config.max_request_body_size
 
       raise Exceptions::PayloadTooLarge.new
     end
 
     private def read_body_with_limit(io : IO) : String
-      limit = Kemal.config.max_request_body_size
+      limit = @config.max_request_body_size
       String.build do |str|
         bytes_read = IO.copy(io, str, limit + 1)
         if bytes_read > limit

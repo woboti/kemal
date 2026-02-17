@@ -3,7 +3,7 @@ module Kemal
 
     getter config : Kemal::Config
     getter handler : HTTP::Server?
-    getter running = false
+    property running = false
 
     Log = ::Log.for(self)
 

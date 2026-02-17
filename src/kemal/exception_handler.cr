@@ -3,6 +3,14 @@ module Kemal
   class ExceptionHandler
     include HTTP::Handler
 
+    getter config : Kemal::Config = Config::INSTANCE
+
+    def initialize()
+    end
+
+    def initialize(@config : Kemal::Config)
+    end
+
     def call(context : HTTP::Server::Context)
       call_next(context)
     rescue ex : Kemal::Exceptions::RouteNotFound
@@ -16,7 +24,7 @@ module Kemal
       #
       # Matches based on order of declaration rather than inheritance relationship
       # for child exceptions
-      Kemal.config.exception_handlers.each do |expected_exception, handler|
+      @config.exception_handlers.each do |expected_exception, handler|
         if ex.class <= expected_exception
           return call_exception_with_exception(context, ex, handler, 500)
         end
@@ -24,8 +32,8 @@ module Kemal
 
       Log.error(exception: ex) { ex.message }
       # Else use generic 500 handler if defined
-      return call_exception_with_status_code(context, ex, 500) if Kemal.config.error_handlers.has_key?(500)
-      verbosity = Kemal.config.env == "production" ? false : true
+      return call_exception_with_status_code(context, ex, 500) if @config.error_handlers.has_key?(500)
+      verbosity = @config.env == "production" ? false : true
       render_500(context, ex, verbosity)
     end
 
@@ -49,10 +57,10 @@ module Kemal
 
     private def call_exception_with_status_code(context : HTTP::Server::Context, exception : Exception, status_code : Int32)
       return if context.response.closed?
-      if !Kemal.config.error_handlers.empty? && Kemal.config.error_handlers.has_key?(status_code)
+      if !@config.error_handlers.empty? && @config.error_handlers.has_key?(status_code)
         context.response.content_type = "text/html" unless context.response.headers.has_key?("Content-Type")
         context.response.status_code = status_code
-        context.response.print Kemal.config.error_handlers[status_code].call(context, exception)
+        context.response.print @config.error_handlers[status_code].call(context, exception)
         context
       end
     end

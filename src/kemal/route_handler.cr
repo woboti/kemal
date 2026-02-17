@@ -152,7 +152,7 @@ module Kemal
       return if context.response.closed?
       content = context.route.handler.call(context)
 
-      if !Kemal.config.error_handlers.empty? && Kemal.config.error_handlers.has_key?(context.response.status_code)
+      if !@config.error_handlers.empty? && @config.error_handlers.has_key?(context.response.status_code)
         raise Kemal::Exceptions::CustomException.new(context)
       end
 
