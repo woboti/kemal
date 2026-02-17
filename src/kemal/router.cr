@@ -54,6 +54,7 @@ module Kemal
       router : Router
 
     getter prefix : String
+    getter config : Kemal::Config = Config::INSTANCE
 
     @routes : Array(RouteDefinition)
     @filters : Array(FilterDefinition)
@@ -147,7 +148,7 @@ module Kemal
     # end
     # ```
     def namespace(path : String, &)
-      sub_router = Router.new
+      sub_router = Router.new(config: @config)
       with sub_router yield
       @sub_routers << SubRouter.new(path: path, router: sub_router)
     end
@@ -180,6 +181,14 @@ module Kemal
     #
     # :nodoc:
     def register_routes(base_prefix : String = "")
+      register_routes(@config, base_prefix)
+    end
+
+    # Registers all routes, filters, and websockets with Kemal's handlers.
+    # This is called automatically when using `mount` from DSL.
+    #
+    # :nodoc:
+    def register_routes(config : Kemal::Config, base_prefix : String = "")
       full_prefix = join_paths(base_prefix, @prefix)
 
       # Collect all route paths for filter registration
@@ -192,7 +201,7 @@ module Kemal
       @routes.each do |route|
         full_path = join_paths(full_prefix, route.path)
         validate_path!(route.method.downcase, full_path)
-        @config.route_handler.add_route(route.method, full_path) do |env|
+        config.route_handler.add_route(route.method, full_path) do |env|
           route.handler.call(env)
         end
       end
@@ -201,13 +210,13 @@ module Kemal
       @websockets.each do |ws_def|
         full_path = join_paths(full_prefix, ws_def.path)
         validate_path!("ws", full_path)
-        @config.web_socket_handler.add_route(full_path, &ws_def.handler)
+        config.web_socket_handler.add_route(full_path, &ws_def.handler)
       end
 
       # Register sub-routers recursively
       @sub_routers.each do |sub|
         sub_prefix = join_paths(full_prefix, sub.path)
-        sub.router.register_routes(sub_prefix)
+        sub.router.register_routes(config, sub_prefix)
       end
     end
 

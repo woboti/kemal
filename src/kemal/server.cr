@@ -130,6 +130,55 @@ module Kemal
       end
     {% end %}
 
+    # Defines a WebSocket route.
+    #
+    # NOTE: The path must start with a `/`.
+    #
+    # ```
+    # ws "/chat" do |socket, env|
+    #   socket.on_message do |msg|
+    #     socket.send "Echo: #{msg}"
+    #   end
+    # end
+    # ```
+    def ws(path : String, &block : HTTP::WebSocket, HTTP::Server::Context ->)
+      raise Kemal::Exceptions::InvalidPathStartException.new("ws", path) unless Kemal::Utils.path_starts_with_slash?(path)
+      @config.web_socket_handler.add_route path, &block
+    end
+
+    # Defines an error handler for the given HTTP status code.
+    #
+    # ```
+    # error 404 do |env|
+    #   "Page not found"
+    # end
+    # ```
+    def error(status_code : Int32, &block : HTTP::Server::Context, Exception -> _)
+      @config.add_error_handler status_code, &block
+    end
+
+    # Defines an error handler for the given `HTTP::Status`.
+    #
+    # ```
+    # error :not_found do |env|
+    #   "Page not found"
+    # end
+    # ```
+    def error(status : HTTP::Status, &block : HTTP::Server::Context, Exception -> _)
+      @config.add_error_handler status.code, &block
+    end
+
+    # Defines an error handler for the given exception type.
+    #
+    # ```
+    # error MyCustomException do |env, ex|
+    #   "Error: #{ex.message}"
+    # end
+    # ```
+    def error(exception : Exception.class, &block : HTTP::Server::Context, Exception -> _)
+      @config.add_exception_handler exception, &block
+    end
+
     # Defines filters that run before or after requests.
     #
     # Available methods:
@@ -163,5 +212,161 @@ module Kemal
         end
       {% end %}
     {% end %}
+
+    # Adds a `HTTP::Handler` (middleware) to the handler chain.
+    # The handler runs for all requests.
+    #
+    # ```
+    # use MyHandler.new
+    # ```
+    def use(handler : HTTP::Handler)
+      @config.add_handler(handler)
+    end
+
+    # Adds a `HTTP::Handler` (middleware) at a specific position in the handler chain.
+    #
+    # ```
+    # use MyHandler.new, position: 1
+    # ```
+    def use(handler : HTTP::Handler, position : Int32)
+      @config.add_handler(handler, position)
+    end
+
+    # Adds a `HTTP::Handler` (middleware) that only runs for requests matching the path prefix.
+    #
+    # ```
+    # use "/api", AuthHandler.new
+    # ```
+    #
+    # The handler will execute for:
+    # - Exact match: `/api`
+    # - Prefix match: `/api/users`, `/api/posts/1`
+    #
+    # But NOT for:
+    # - `/`, `/apiv2`, `/other`
+    def use(path : String, handler : HTTP::Handler)
+      @config.add_handler(Kemal::PathHandler.new(path, handler))
+    end
+
+    # Adds multiple `HTTP::Handler` (middlewares) for a specific path prefix.
+    #
+    # ```
+    # use "/api", [AuthHandler.new, RateLimiter.new, CorsHandler.new]
+    # ```
+    def use(path : String, handlers : Enumerable(HTTP::Handler))
+      handlers.each do |handler|
+        use(path, handler)
+      end
+    end
+
+    # Mounts a router without additional prefix.
+    #
+    # ```
+    # api = Kemal::Router.new
+    # api.get "/users" do |env|
+    #   "users"
+    # end
+    #
+    # mount api
+    # # Result: GET /users
+    # ```
+    def mount(router : Kemal::Router)
+      router.register_routes(@config)
+    end
+
+    # Mounts a router at the given *path* prefix.
+    #
+    # NOTE: The path must start with a `/`.
+    #
+    # All routes defined in the router will be prefixed with the given path.
+    #
+    # ```
+    # api = Kemal::Router.new
+    # api.get "/users" do |env|
+    #   "users"
+    # end
+    #
+    # mount "/api/v1", api
+    # # Result: GET /api/v1/users
+    # ```
+    def mount(path : String, router : Kemal::Router)
+      router.register_routes(@config, path)
+    end
+
+    # Sets public folder from which the static assets will be served.
+    #
+    # By default this is `/public` not `src/public`.
+    def public_folder(path : String)
+      @config.public_folder = path
+    end
+
+    # Enables / Disables logging.
+    # This is enabled by default.
+    #
+    # ```
+    # logging false
+    # ```
+    def logging(status : Bool)
+      @config.logging = status
+    end
+
+    # This is used to replace the built-in `Kemal::LogHandler` with a custom logger.
+    #
+    # A custom logger must inherit from `Kemal::BaseLogHandler` and must implement
+    # `call(context)`, `write(message)` methods.
+    #
+    # ```
+    # class MyCustomLogger < Kemal::BaseLogHandler
+    #   def call(context)
+    #     puts "I'm logging some custom stuff here."
+    #     call_next(context) # => This calls the next handler
+    #   end
+    #
+    #   # This is used from `log` method.
+    #   def write(message)
+    #     STDERR.puts message # => Logs the output to STDERR
+    #   end
+    # end
+    # ```
+    #
+    # Now that we have a custom logger here's how we use it
+    #
+    # ```
+    # logger MyCustomLogger.new
+    # ```
+    def logger(logger : Kemal::BaseLogHandler)
+      @config.logger = logger
+    end
+
+    # Enables / Disables static file serving.
+    # This is enabled by default.
+    #
+    # ```
+    # serve_static false
+    # ```
+    #
+    # Static server also have some advanced customization options like `dir_listing` and
+    # `gzip`.
+    #
+    # ```
+    # serve_static {"gzip" => true, "dir_listing" => false}
+    # ```
+    def serve_static(status : (Bool | Hash))
+      @config.serve_static = status
+    end
+
+    # Adds headers to `Kemal::StaticFileHandler`. This is especially useful for `CORS`.
+    #
+    # ```
+    # static_headers do |env, filepath, filestat|
+    #   if filepath =~ /\.html$/
+    #     env.response.headers.add("Access-Control-Allow-Origin", "*")
+    #   end
+    #   env.response.headers.add("Content-Size", filestat.size.to_s)
+    # end
+    # ```
+    def static_headers(&headers : HTTP::Server::Context, String, File::Info ->)
+      @config.static_headers = headers
+    end
   end
 end
