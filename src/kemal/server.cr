@@ -10,8 +10,19 @@ module Kemal
     def initialize(@config : Kemal::Config)
     end
 
-    def initialize(@config : Kemal::Config, &)
-      with self yield self
+    # def initialize(@config : Kemal::Config, &)
+    #   # https://github.com/crystal-lang/crystal/issues/4436
+    #   # with self yield does not work due to
+    #   # https://github.com/crystal-lang/crystal/issues/13714#issuecomment-1680318002
+    #   # but the following works
+    #   yield self
+    # end
+
+    def self.new(config : Kemal::Config, &)
+      # https://github.com/crystal-lang/crystal/issues/4436#issuecomment-302881945
+      instance = new config
+      with instance yield
+      instance
     end
 
     def init
@@ -291,6 +302,29 @@ module Kemal
     # ```
     def mount(path : String, router : Kemal::Router)
       router.register_routes(@config, path)
+    end
+
+    # Creates a nested namespace/group with the given *path* prefix.
+    #
+    # NOTE: The path must start with a `/`.
+    #
+    # All routes defined inside the block will be prefixed with the given path.
+    #
+    # ```
+    # server.namespace "/users" do
+    #   get "/" do |env|
+    #     User.all.to_json
+    #   end
+    #
+    #   get "/:id" do |env|
+    #     User.find(env.params.url["id"]).to_json
+    #   end
+    # end
+    # ```
+    def namespace(path : String, &)
+      router = Router.new(path, @config)
+      with router yield
+      router.register_routes(@config)
     end
 
     # Sets public folder from which the static assets will be served.
