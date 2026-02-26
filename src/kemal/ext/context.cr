@@ -8,7 +8,7 @@ class HTTP::Server
     # :nodoc:
     STORE_MAPPINGS = [Nil, String, Int32, Int64, Float64, Bool]
 
-    property config : Kemal::Config?
+    property config : Kemal::Config? { Kemal::Config::INSTANCE }
 
     macro finished
       alias StoreTypes = Union({{ STORE_MAPPINGS.splat }})
@@ -20,12 +20,14 @@ class HTTP::Server
     # Optimized: Use cached lookup results to avoid redundant route lookups
     # when params is accessed after route_found? or route has already been called
     def params
-      ws_lookup = ws_route_lookup
-      if ws_lookup.found?
-        @params ||= Kemal::ParamParser.new(@request, ws_lookup.params)
-      else
-        @params ||= Kemal::ParamParser.new(@request, route_lookup.params)
+      lookup = ws_route_lookup
+      if !lookup.nil? && lookup.found?
+        @params ||= Kemal::ParamParser.new(@request, lookup.params, config)
+      elsif !(lookup = ws_route_lookup).nil? && lookup.found?
+        @params ||= Kemal::ParamParser.new(@request, lookup.params, config)
       end
+
+      @params ||= Kemal::ParamParser.new(@request, config: config)
     end
 
     def redirect(url : String | URI, status_code : Int32 = 302, *, body : String? = nil, close : Bool = true)
@@ -36,30 +38,58 @@ class HTTP::Server
     end
 
     def route
-      route_lookup.payload
+      route_lookup!.payload
     end
 
     def websocket
-      ws_route_lookup.payload
+      ws_route_lookup!.payload
+    end
+
+    def route=(route : Radix::Result(Kemal::Route))
+      @cached_route_lookup = route
+    end
+
+    def websocket_route=(route : Radix::Result(Kemal::WebSocket))
+      @cached_ws_route_lookup = route
     end
 
     # Optimized: Cache route lookup result to avoid redundant lookups
     # when called multiple times (e.g., route_found?, route, params)
     def route_lookup
-      @cached_route_lookup ||= config.route_handler.lookup_route(@request.method.as(String), @request.path)
+      @cached_route_lookup
+    end
+
+    def route_lookup!
+      lookup = route_lookup
+      if !lookup.nil?
+        return lookup
+      end
+
+      raise "route is null"
     end
 
     def route_found?
-      route_lookup.found?
+      lookup = route_lookup
+      !lookup.nil? && lookup.found?
     end
 
     # Optimized: Cache websocket route lookup result to avoid redundant lookups
     def ws_route_lookup
-      @cached_ws_route_lookup ||= config.web_socket_handler.lookup_ws_route(@request.path)
+      @cached_ws_route_lookup
+    end
+
+    def ws_route_lookup!
+      lookup = ws_route_lookup
+      if !lookup.nil?
+        return lookup
+      end
+
+      raise "websocket route is null"
     end
 
     def ws_route_found?
-      ws_route_lookup.found?
+      lookup = ws_route_lookup
+      !lookup.nil? && lookup.found?
     end
 
     def config
